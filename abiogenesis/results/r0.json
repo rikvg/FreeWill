@@ -1,0 +1,32 @@
+{
+ "minimal in random": {
+  "first": 1.58,
+  "second": 0.35,
+  "R0": 0.96
+ },
+ "evolved in random": {
+  "first": 1.98,
+  "second": 0.34,
+  "R0": 1.16
+ },
+ "minimal in pre-life e8960": {
+  "first": 1.55,
+  "second": 0.24,
+  "R0": 0.89
+ },
+ "evolved in pre-life e8960": {
+  "first": 1.83,
+  "second": 0.42,
+  "R0": 1.12
+ },
+ "minimal in pre-life e11520": {
+  "first": 1.53,
+  "second": 0.25,
+  "R0": 0.89
+ },
+ "evolved in pre-life e11520": {
+  "first": 1.82,
+  "second": 0.38,
+  "R0": 1.1
+ }
+}

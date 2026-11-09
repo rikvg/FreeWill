@@ -1,0 +1,16 @@
+{
+ "init_frac": 0.000928044319152832,
+ "mut_frac": 0.2928183078765869,
+ "edit_frac": 0.7062536478042603,
+ "median_age": 662,
+ "freq_lt": 0.06233632564544678,
+ "freq_comma": 0.03087329864501953,
+ "p_loaded": 1.0491794687109937e-20,
+ "frag": 75,
+ "rep_edit": 51,
+ "rep_mut": 13,
+ "ess_events": 3,
+ "ess_min": 9747,
+ "ess_max": 11339,
+ "lottery_score1": 2
+}

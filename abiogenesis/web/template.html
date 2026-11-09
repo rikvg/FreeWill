@@ -1,0 +1,410 @@
+<title>Replicators From Noise</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a single reading column (~68ch) with full-bleed figure bands; instruments (tape, soup) sit on raised plates. */
+:root {
+  --paper: #edf0eb;      /* pale bench grey-green */
+  --plate: #f8f9f6;      /* raised instrument surface */
+  --ink: #1b2321;
+  --muted: #5d6965;
+  --rule: #cdd4cf;
+  --rep: #b02f6b;        /* replicators */
+  --h0: #2f5fb3;         /* head 0 */
+  --h1: #c4501a;         /* head 1 */
+  --edit: #a77a00;       /* bytes born from + / - */
+  --mut: #4c8a74;        /* bytes born from mutation */
+  --loop: #2f7d3f;       /* brackets */
+  --cmd: #6b3fa0;        /* other commands */
+  --zero: #c23434;
+  --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #121715; --plate: #1a201e; --ink: #e2e7e3; --muted: #95a29d; --rule: #2e3734;
+  --rep: #f06aa6; --h0: #79a3f0; --h1: #f08a55; --edit: #e1b53c; --mut: #74c4a6; --loop: #6cc47d; --cmd: #b590e6; --zero: #f07070;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --paper: #121715; --plate: #1a201e; --ink: #e2e7e3; --muted: #95a29d; --rule: #2e3734;
+  --rep: #f06aa6; --h0: #79a3f0; --h1: #f08a55; --edit: #e1b53c; --mut: #74c4a6; --loop: #6cc47d; --cmd: #b590e6; --zero: #f07070;
+  color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font: 400 1.0625rem/1.62 var(--body); }
+.wrap { max-width: 46rem; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 3rem 5rem; display: grid; gap: 1.1rem; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.12; margin: 0; }
+h1 { font-size: clamp(2.3rem, 7vw, 3.6rem); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 1.65rem; font-weight: 700; margin-top: 2.2rem; }
+h3 { font-size: 1.15rem; font-weight: 500; }
+p { margin: 0; }
+.kicker { font: 600 0.75rem/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 1.22rem; line-height: 1.5; }
+code, .mono { font-family: var(--mono); font-size: 0.88em; }
+a { color: var(--h0); }
+.plate { background: var(--plate); border: 1px solid var(--rule); border-radius: 6px; padding: 1rem; display: grid; gap: 0.75rem; min-width: 0; }
+figcaption, .caption { font-size: 0.9rem; color: var(--muted); line-height: 1.45; }
+figure { margin: 0; display: grid; gap: 0.6rem; min-width: 0; }
+.scroll { overflow-x: auto; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); gap: 0.75rem; }
+.fact { border-top: 2px solid var(--ink); padding-top: 0.5rem; display: grid; gap: 0.2rem; }
+.fact b { font: 600 1.5rem/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.fact span { font-size: 0.9rem; color: var(--muted); line-height: 1.35; }
+table.ops { border-collapse: collapse; font-size: 0.95rem; width: 100%; }
+table.ops td { padding: 0.28rem 0.6rem 0.28rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+table.ops td:first-child { font: 600 1.05rem var(--mono); width: 2.2rem; }
+.prog { font: 400 0.95rem/1.5 var(--mono); letter-spacing: 0.04em; word-break: break-all; }
+.prog .e { background: color-mix(in srgb, var(--rep) 22%, transparent); color: var(--rep); font-weight: 600; border-radius: 2px; }
+.btns { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+button, select { font: 600 0.85rem var(--mono); color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; padding: 0.45rem 0.75rem; cursor: pointer; }
+button:hover { border-color: var(--ink); }
+button:focus-visible, select:focus-visible { outline: 2px solid var(--h0); outline-offset: 2px; }
+button.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.readout { font: 400 0.85rem/1.4 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.tape { display: grid; grid-template-columns: repeat(16, 1fr); gap: 2px; font: 600 0.82rem var(--mono); }
+.tape div { aspect-ratio: 1; display: grid; place-items: center; border-radius: 3px; background: var(--paper); color: var(--muted); border: 1.5px solid transparent; min-width: 0; }
+.tape div.c { color: var(--cmd); } .tape div.l { color: var(--loop); } .tape div.z { color: var(--zero); }
+.tape div.h0 { background: color-mix(in srgb, var(--h0) 26%, var(--paper)); }
+.tape div.h1 { background: color-mix(in srgb, var(--h1) 26%, var(--paper)); }
+.tape div.h0.h1 { background: linear-gradient(135deg, color-mix(in srgb, var(--h0) 30%, var(--paper)) 50%, color-mix(in srgb, var(--h1) 30%, var(--paper)) 50%); }
+.tape div.pc { border-color: var(--ink); }
+.tape div.half { box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--rep) 55%, transparent); }
+.legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; font: 400 0.8rem var(--mono); color: var(--muted); }
+.legend i { display: inline-block; width: 0.8rem; height: 0.8rem; border-radius: 2px; vertical-align: -0.1rem; margin-right: 0.3rem; }
+svg text { fill: var(--muted); font: 400 11px var(--mono); }
+svg .axis { stroke: var(--rule); }
+canvas { width: 100%; max-width: 100%;}
+#soup { max-width: 26rem; margin-inline: auto; image-rendering: pixelated; border-radius: 4px; display: block; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; }
+.verdict { border-left: 3px solid var(--rep); padding: 0.2rem 0 0.2rem 1rem; font-size: 1.1rem; }
+ul { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.35rem; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <p class="kicker">Artificial life · an experiment log · November 2026</p>
+  <h1>Replicators From Noise</h1>
+  <p class="lede">Fill a computer's memory with random bytes. Let the bytes run as programs that can rewrite each other. With no fitness function and no goal, self-copying programs appear and take over. I rebuilt this experiment, tagged every byte with where it came from, and asked how the first replicator gets made: by luck, or by a process?</p>
+
+  <figure class="plate">
+    <canvas id="hero" width="512" height="128" aria-label="The soup of seed 1 before and after replicators take over, one row per program"></canvas>
+    <figcaption>Two slices of the same soup, 256 programs each, drawn one program per column (64 bytes tall). Left: epoch 11,520, the last snapshot before replicators appear. Right: epoch 11,776, when 80% of programs replicate. Colour shows instruction type: <span style="color:var(--loop)">loops</span>, <span style="color:var(--cmd)">other commands</span>, <span style="color:var(--zero)">zero bytes</span>, grey for inert data.</figcaption>
+  </figure>
+
+  <div class="facts" id="facts"></div>
+
+  <h2>The setup</h2>
+  <p>The language is BFF, a variant of Brainfuck from <a href="https://arxiv.org/abs/2406.19108">Agüera y Arcas et al. (2024)</a>. A program is 64 bytes. Code and data share the same tape, and two read/write heads can point anywhere in it. Only 10 of the 256 byte values do anything:</p>
+  <div class="scroll"><table class="ops">
+    <tr><td>&lt; &gt;</td><td>move head 0 left / right</td></tr>
+    <tr><td>{ }</td><td>move head 1 left / right</td></tr>
+    <tr><td>+ -</td><td>add / subtract 1 at head 0</td></tr>
+    <tr><td>.</td><td>copy the byte at head 0 to head 1</td></tr>
+    <tr><td>,</td><td>copy the byte at head 1 to head 0</td></tr>
+    <tr><td>[ ]</td><td>loop while the byte at head 0 is not zero</td></tr>
+  </table></div>
+  <p>The soup holds 131,072 random programs. Each epoch, every program is paired with a random partner. The two are joined into a 128-byte tape and run for up to 8,192 steps, so either can overwrite the other. Then they are split apart again. Each byte has a 1 in 4,096 chance of mutating per interaction. Nothing rewards copying. A program that happens to copy itself into its partner simply ends up with more copies of itself.</p>
+  <p>I wrote my own simulator in C, following the authors' reference code instruction for instruction, and added one thing: a <em>provenance tag</em> on every byte. It records when the byte's value was born, and how: part of the initial random soup, a mutation, or an edit by some program's <code>+</code>/<code>-</code>. Copy instructions carry tags along with values.</p>
+
+  <h2>It happens, suddenly</h2>
+  <figure class="plate">
+    <div class="scroll"><svg id="chart1" viewBox="0 0 640 260" width="100%" role="img" aria-label="Higher-order entropy and replicator fraction over epochs for seed 1"></svg></div>
+    <figcaption>Seed 1. <span style="color:var(--ink)">Line</span>: higher-order entropy, the paper's complexity measure (Shannon entropy of single bytes minus the compressed size, in bits per byte). <span style="color:var(--rep)">Shaded</span>: share of 512 sampled programs that pass a self-replication test. For 11,600 epochs the soup is busy but nothing copies itself. Then, within about 130 epochs, more than 80% of the soup replicates.</figcaption>
+  </figure>
+
+  <h2>What took over</h2>
+  <p>The most common replicator after takeover, with its essential bytes highlighted. Replacing any highlighted byte with an inert one destroys replication. Every other byte can be knocked out with no effect:</p>
+  <div class="plate"><div class="prog" id="evolved"></div><div class="caption" id="evolvedcap"></div></div>
+  <p>Three instructions matter: <code>,</code> <code>}</code> <code>&lt;</code>. Inside a loop they mean: copy the byte at head 1 to head 0, move head 1 right, move head 0 left. The two heads walk in opposite directions, so the program copies itself into its neighbour <em>backwards</em>. A mirrored copy of <code>[,}&lt;]</code> is <code>]&lt;},[</code>, which doesn't parse as a loop. So a working replicator needs the motif at both ends, mirrored. Its child is its mirror image, and its grandchild is itself again. The soup's second most common species is exactly the reverse of the first.</p>
+  <p>From that, I could build a minimal replicator by hand. Ten fixed bytes, and anything in between:</p>
+  <div class="plate"><div class="prog" id="minimal"></div><div class="caption">With the 53 middle bytes random, 196 of 200 variants pass the replication test (score 63 out of 64).</div></div>
+
+  <figure class="plate">
+    <h3>Watch it copy</h3>
+    <div class="btns">
+      <select id="which" aria-label="Program to run"><option value="min">Minimal replicator</option><option value="evo">Evolved replicator (seed 1)</option></select>
+      <button id="play" class="primary">Play</button><button id="stepb">Step</button><button id="reset">New partner</button>
+    </div>
+    <div class="tape" id="tape"></div>
+    <div class="legend"><span><i style="background:color-mix(in srgb,var(--h0) 40%,var(--paper))"></i>head 0 (writes)</span><span><i style="background:color-mix(in srgb,var(--h1) 40%,var(--paper))"></i>head 1 (reads)</span><span><i style="border:1.5px solid var(--ink)"></i>instruction pointer</span><span>top 4 rows: the program · bottom 4: a random partner</span></div>
+    <div class="readout" id="tapeinfo">step 0</div>
+  </figure>
+
+  <h2>Lottery or process?</h2>
+  <p>A ten-byte target sounds easy to hit by chance. It isn't. Here is the evidence from four directions.</p>
+  <h3>1. Random programs never replicate</h3>
+  <p id="lot1"></p>
+  <h3>2. Loaded dice don't help enough</h3>
+  <p id="lot2"></p>
+  <h3>3. The soup was not primed</h3>
+  <p id="lot3"></p>
+  <h3>4. Waiting times</h3>
+  <p id="lot4"></p>
+  <figure class="plate" id="waitfig">
+    <div class="scroll"><svg id="chart2" viewBox="0 0 640 230" width="100%" role="img" aria-label="Waiting times to takeover across independent small soups"></svg></div>
+    <figcaption id="waitcap"></figcaption>
+  </figure>
+
+  <h2>Copying is not enough</h2>
+  <p>My ten-byte replicator passes the replication test, yet dropped into a soup it always dies out. The evolved one survives. The difference is what happens across a whole epoch. A replicator goes first half the time, keeping itself and writing a child into its partner. The other half it goes second, and the partner's code runs first. In 78% of those pairings that code runs on into the second half, moves the heads, and usually wrecks the replicator. Averaging the two cases gives the expected number of working copies after one epoch, the replicator's R<sub>0</sub>:</p>
+  <div class="scroll"><table class="ops" id="r0table"></table></div>
+  <p id="r0text"></p>
+
+  <h2>Everything was rewritten</h2>
+  <p id="prov"></p>
+
+  <h2>Seed one yourself</h2>
+  <figure class="plate">
+    <div class="btns"><button id="soupPlay" class="primary">Run soup</button><button id="soupSeed">Add one replicator</button><select id="soupKind" aria-label="Replicator to add"><option value="evo">evolved (R₀≈1.16)</option><option value="min">minimal (R₀≈0.96)</option></select><button id="soupReset">Reset to noise</button></div>
+    <canvas id="soup" width="256" height="256" aria-label="A live soup of 1,024 programs, each an 8 by 8 block of bytes"></canvas>
+    <div class="readout" id="soupinfo"></div>
+    <figcaption>A live soup of 1,024 programs, each drawn as an 8×8 block, running the same rules in your browser (mutation included). From noise, the first replicator would take far longer than you'd want to wait. Add one by hand: programs that currently replicate are drawn in <span style="color:var(--rep)">magenta</span>. The evolved replicator establishes about one time in three and is otherwise lost while rare. The minimal one never establishes. Try both.</figcaption>
+  </figure>
+
+  <h2>What I conclude</h2>
+  <div id="conclusion"></div>
+
+  <h2>Method notes and caveats</h2>
+  <ul id="caveats"></ul>
+</div>
+
+<script>
+const DATA = /*DATA*/null;
+</script>
+<script>
+/*BFFJS*/
+</script>
+<script>
+(function () {
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const OPS = '<>{}+-.,[]';
+  const isOp = b => b !== 0 && OPS.includes(String.fromCharCode(b));
+  const glyph = b => isOp(b) ? String.fromCharCode(b) : (b === 0 ? '0' : '·');
+  const fmt = n => n.toLocaleString('en-US');
+  const $ = id => document.getElementById(id);
+  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const hexBytes = h => Uint8Array.from(h.match(/../g).map(x => parseInt(x, 16)));
+
+  function byteColor(b) {
+    if (b === 0) return css('--zero');
+    if (b === 91 || b === 93) return css('--loop');
+    if (isOp(b)) return css('--cmd');
+    return null;
+  }
+
+  // ---------- hero ----------
+  function drawHero() {
+    const c = $('hero'), g = c.getContext('2d');
+    g.fillStyle = css('--plate'); g.fillRect(0, 0, c.width, c.height);
+    const grey = css('--rule');
+    const slices = [DATA.hero.before, DATA.hero.after];
+    slices.forEach((progs, si) => {
+      progs.forEach((hex, k) => {
+        const b = hexBytes(hex);
+        for (let j = 0; j < 64; j++) {
+          g.fillStyle = byteColor(b[j]) || grey;
+          g.fillRect(si * 256 + k, j * 2, 1, 2);
+        }
+      });
+    });
+    g.fillStyle = css('--paper'); g.fillRect(255, 0, 2, 128);
+  }
+
+  // ---------- facts ----------
+  function facts() {
+    const f = DATA.facts;
+    $('facts').innerHTML = f.map(([v, l]) => `<div class="fact"><b>${v}</b><span>${l}</span></div>`).join('');
+  }
+
+  // ---------- chart 1 ----------
+  function chart1() {
+    const svg = $('chart1'), W = 640, H = 260, m = { l: 44, r: 44, t: 14, b: 30 };
+    const L = DATA.log, xmax = L[L.length - 1][0];
+    const x = e => m.l + (W - m.l - m.r) * e / xmax;
+    const ymax = 5;
+    const y = v => H - m.b - (H - m.t - m.b) * Math.max(0, v) / ymax;
+    const yr = v => H - m.b - (H - m.t - m.b) * v;
+    let s = '';
+    for (let v = 0; v <= ymax; v++) s += `<line class="axis" x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}" stroke-width="${v ? 0.5 : 1}"/><text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+    for (let e = 0; e <= xmax; e += 2000) s += `<text x="${x(e)}" y="${H - m.b + 16}" text-anchor="middle">${fmt(e)}</text>`;
+    s += `<text x="${(W) / 2}" y="${H - 2}" text-anchor="middle">epoch</text>`;
+    s += `<text x="${m.l - 6}" y="${m.t - 2}" text-anchor="end">bits</text>`;
+    for (const v of [0, 0.5, 1]) s += `<text x="${W - m.r + 6}" y="${yr(v) + 4}">${v * 100}%</text>`;
+    let area = `M${x(L[0][0])},${yr(0)}`;
+    L.forEach(r => area += `L${x(r[0])},${yr(r[2])}`);
+    area += `L${x(xmax)},${yr(0)}Z`;
+    s += `<path d="${area}" fill="${css('--rep')}" fill-opacity="0.22" stroke="${css('--rep')}" stroke-width="1"/>`;
+    s += `<path d="M${L.map(r => x(r[0]) + ',' + y(r[1])).join('L')}" fill="none" stroke="${css('--ink')}" stroke-width="1.6"/>`;
+    const te = DATA.takeover;
+    s += `<line x1="${x(te)}" x2="${x(te)}" y1="${m.t}" y2="${H - m.b}" stroke="${css('--rep')}" stroke-dasharray="3 3"/>`;
+    s += `<text x="${x(te) - 6}" y="${m.t + 10}" text-anchor="end" style="fill:${css('--rep')}">takeover, epoch ${fmt(te)}</text>`;
+    svg.innerHTML = s;
+  }
+
+  // ---------- programs ----------
+  function progHTML(hex, ess) {
+    const b = hexBytes(hex);
+    return Array.from(b, (v, j) => ess && ess.includes(j) ? `<span class="e">${esc(glyph(v))}</span>` : esc(glyph(v))).join('');
+  }
+  function programs() {
+    const ev = DATA.evolved;
+    $('evolved').innerHTML = progHTML(ev.hex, ev.essential);
+    $('evolvedcap').textContent = `${fmt(ev.count)} identical copies at epoch ${fmt(ev.epoch)}, out of ${fmt(ev.replicators)} replicating programs. Self-replication score ${ev.score}/64. “·” marks a byte that is not an instruction; “0” is a zero byte.`;
+    const mn = new Uint8Array(64); mn.fill(65);
+    '[,}<]'.split('').forEach((c, i) => mn[1 + i] = c.charCodeAt(0));
+    ']<},['.split('').forEach((c, i) => mn[59 + i] = c.charCodeAt(0));
+    $('minimal').innerHTML = progHTML(Array.from(mn, v => v.toString(16).padStart(2, '0')).join(''), [1,2,3,4,5,59,60,61,62,63]);
+  }
+
+  // ---------- tape stepper ----------
+  let st, timer = null;
+  const cells = [];
+  function partner() { const t = new Uint8Array(64); for (let i = 0; i < 64; i++) { let v = Math.floor(Math.random() * 256); t[i] = v; } return t; }
+  function loadTape() {
+    const which = $('which').value;
+    const prog = which === 'evo' ? hexBytes(DATA.evolved.hex) : (() => { const p = new Uint8Array(64).fill(65); '[,}<]'.split('').forEach((c, i) => p[1 + i] = c.charCodeAt(0)); ']<},['.split('').forEach((c, i) => p[59 + i] = c.charCodeAt(0)); return p; })();
+    const t = new Uint8Array(128); t.set(prog, 0); t.set(partner(), 64);
+    st = BFF.makeState(t); st.orig = prog.slice();
+    renderTape();
+  }
+  function renderTape() {
+    const t = st.tape;
+    for (let i = 0; i < 128; i++) {
+      const d = cells[i], b = t[i];
+      d.textContent = glyph(b);
+      d.className = (b === 0 ? 'z' : (b === 91 || b === 93) ? 'l' : isOp(b) ? 'c' : '') + (i === (st.h0 & 127) ? ' h0' : '') + (i === (st.h1 & 127) ? ' h1' : '') + (i === st.pos && !st.halted ? ' pc' : '') + (i >= 64 && t[i] === st.orig[(128 - i) % 64] ? ' half' : '');
+    }
+    let mirrored = 0; for (let i = 65; i < 128; i++) if (t[i] === st.orig[128 - i]) mirrored++;
+    $('tapeinfo').textContent = `step ${st.steps} · ${st.ops} instructions executed · partner bytes now matching the program's mirror image: ${mirrored}/63${st.halted ? ' · halted' : ''}`;
+  }
+  function tick() { for (let k = 0; k < 3; k++) if (!BFF.step(st)) { stop(); break; } renderTape(); }
+  function stop() { clearInterval(timer); timer = null; $('play').textContent = 'Play'; }
+  function initTape() {
+    const box = $('tape');
+    for (let i = 0; i < 128; i++) { const d = document.createElement('div'); box.appendChild(d); cells.push(d); }
+    $('play').onclick = () => { if (timer) return stop(); if (st.halted) loadTape(); timer = setInterval(tick, 60); $('play').textContent = 'Pause'; };
+    $('stepb').onclick = () => { stop(); if (!st.halted) BFF.step(st); renderTape(); };
+    $('reset').onclick = () => { stop(); loadTape(); };
+    $('which').onchange = () => { stop(); loadTape(); };
+    loadTape();
+  }
+
+  // ---------- lottery text ----------
+  function lottery() {
+    const d = DATA.lottery;
+    $('lot1').innerHTML = d.p1;
+    $('lot2').innerHTML = d.p2;
+    $('lot3').innerHTML = d.p3;
+    $('lot4').innerHTML = d.p4;
+    $('waitcap').innerHTML = d.waitcap;
+    $('prov').innerHTML = DATA.prov;
+    const R = DATA.r0;
+    $('r0table').innerHTML = '<tr><td></td><td><b>partners from</b></td><td><b>going first</b></td><td><b>going second</b></td><td><b>R<sub>0</sub></b></td></tr>' +
+      R.rows.map(r => `<tr><td></td><td>${r.who} · ${r.env}</td><td class="mono">${r.first.toFixed(2)}</td><td class="mono">${r.second.toFixed(2)}</td><td class="mono"><b style="color:${r.R0 > 1 ? 'var(--rep)' : 'var(--muted)'}">${r.R0.toFixed(2)}</b></td></tr>`).join('');
+    $('r0text').innerHTML = R.text;
+    $('conclusion').innerHTML = DATA.conclusion;
+    $('caveats').innerHTML = DATA.caveats.map(c => `<li>${c}</li>`).join('');
+  }
+
+  // ---------- chart 2: waiting times ----------
+  function chart2() {
+    const W = DATA.waits;
+    if (!W || !W.runs.length) { $('waitfig').hidden = true; return; }
+    const svg = $('chart2'), w = 640, h = 230, m = { l: 92, r: 20, t: 12, b: 34 };
+    const xmax = W.cap;
+    const x = e => m.l + (w - m.l - m.r) * e / xmax;
+    const rows = W.runs.length, rh = (h - m.t - m.b) / rows;
+    let s = '';
+    for (let e = 0; e <= xmax; e += 10000) s += `<line class="axis" x1="${x(e)}" x2="${x(e)}" y1="${m.t}" y2="${h - m.b}" stroke-width="0.5"/><text x="${x(e)}" y="${h - m.b + 16}" text-anchor="middle">${fmt(e)}</text>`;
+    s += `<text x="${(w + m.l) / 2}" y="${h - 2}" text-anchor="middle">epoch (16,384-program soups)</text>`;
+    W.runs.forEach((r, i) => {
+      const yy = m.t + i * rh + rh / 2;
+      const end = r.takeover ?? r.reached;
+      s += `<text x="${m.l - 8}" y="${yy + 4}" text-anchor="end">${r.name}</text>`;
+      s += `<line x1="${x(0)}" x2="${x(end)}" y1="${yy}" y2="${yy}" stroke="${css('--muted')}" stroke-width="2"/>`;
+      if (r.takeover != null) s += `<circle cx="${x(r.takeover)}" cy="${yy}" r="5" fill="${css('--rep')}"/>`;
+      else s += `<path d="M${x(end)},${yy - 5}L${x(end) + 8},${yy}L${x(end)},${yy + 5}Z" fill="${css('--muted')}"/>`;
+    });
+    svg.innerHTML = s;
+  }
+
+  // ---------- live soup ----------
+  const N = 1024;
+  let soup, soupTimer = null, epoch = 0, seeded = 0;
+  function soupReset() { soup = new Uint8Array(N * 64); for (let i = 0; i < soup.length; i++) soup[i] = Math.floor(Math.random() * 256); epoch = 0; seeded = 0; drawSoup(); }
+  function soupSeed() {
+    const k = Math.floor(Math.random() * N);
+    const p = soup.subarray(k * 64, k * 64 + 64);
+    if ($('soupKind').value === 'evo') p.set(hexBytes(DATA.evolved.hex));
+    else { p[1] = 91; p[2] = 44; p[3] = 125; p[4] = 60; p[5] = 93; p[59] = 93; p[60] = 60; p[61] = 125; p[62] = 44; p[63] = 91; }
+    seeded++; drawSoup();
+  }
+  // A program counts as a replicator if, run against random bytes, it writes
+  // its own mirror image into at least 48 of the partner's 63 positions.
+  const probe = new Uint8Array(128);
+  function carries(k) {
+    const p = soup.subarray(k * 64, k * 64 + 64);
+    probe.set(p, 0);
+    for (let i = 64; i < 128; i++) probe[i] = Math.random() * 256 | 0;
+    BFF.run(probe);
+    let m = 0; for (let i = 1; i < 64; i++) if (probe[128 - i] === p[i]) m++;
+    return m >= 48;
+  }
+  function soupEpoch() {
+    const perm = Uint32Array.from({ length: N }, (_, i) => i);
+    for (let i = N - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = perm[i]; perm[i] = perm[j]; perm[j] = t; }
+    const tape = new Uint8Array(128);
+    for (let k = 0; k < N; k += 2) {
+      const a = perm[k] * 64, b = perm[k + 1] * 64;
+      tape.set(soup.subarray(a, a + 64), 0); tape.set(soup.subarray(b, b + 64), 64);
+      for (let j = 0; j < 128; j++) if (Math.random() < 1 / 4096) tape[j] = Math.floor(Math.random() * 256);
+      BFF.run(tape);
+      soup.set(tape.subarray(0, 64), a); soup.set(tape.subarray(64), b);
+    }
+    epoch++;
+  }
+  function drawSoup() {
+    const c = $('soup'), g = c.getContext('2d');
+    const img = g.createImageData(256, 256);
+    const parse = col => { const m = col.match(/^#([0-9a-f]{6})$/i); const v = m ? parseInt(m[1], 16) : 0x888888; return [v >> 16, (v >> 8) & 255, v & 255]; };
+    const P = { plate: parse(css('--plate')), rule: parse(css('--rule')), loop: parse(css('--loop')), cmd: parse(css('--cmd')), zero: parse(css('--zero')), rep: parse(css('--rep')) };
+    P.repLight = P.rep.map((v, i) => Math.round(v * 0.45 + P.plate[i] * 0.55));
+    let n = 0;
+    for (let k = 0; k < N; k++) {
+      const rep = carries(k); if (rep) n++;
+      const bx = (k % 32) * 8, by = Math.floor(k / 32) * 8;
+      for (let j = 0; j < 64; j++) {
+        const b = soup[k * 64 + j];
+        let col = b === 0 ? P.zero : (b === 91 || b === 93) ? P.loop : isOp(b) ? P.cmd : P.rule;
+        if (rep) col = (isOp(b) || b === 0) ? P.rep : P.repLight;
+        const px = ((by + (j >> 3)) * 256 + bx + (j & 7)) * 4;
+        img.data[px] = col[0]; img.data[px + 1] = col[1]; img.data[px + 2] = col[2]; img.data[px + 3] = 255;
+      }
+    }
+    g.putImageData(img, 0, 0);
+    $('soupinfo').textContent = `epoch ${fmt(epoch)} · replicating programs: ${n} of ${N}` + (seeded ? ` · replicators added by hand: ${seeded}` : '');
+  }
+  function initSoup() {
+    soupReset();
+    for (let i = 0; i < 6; i++) soupEpoch();
+    soupSeed();
+    drawSoup();
+    $('soupPlay').onclick = () => {
+      if (soupTimer) { clearInterval(soupTimer); soupTimer = null; $('soupPlay').textContent = 'Run soup'; return; }
+      soupTimer = setInterval(() => { soupEpoch(); drawSoup(); }, 50);
+      $('soupPlay').textContent = 'Pause';
+    };
+    $('soupSeed').onclick = soupSeed;
+    $('soupReset').onclick = soupReset;
+  }
+
+  function all() { drawHero(); facts(); chart1(); programs(); lottery(); chart2(); }
+  all();
+  initTape();
+  initSoup();
+  const mq = matchMedia('(prefers-color-scheme: dark)');
+  if (mq.addEventListener) mq.addEventListener('change', () => { all(); drawSoup(); });
+  new MutationObserver(() => { all(); drawSoup(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+})();
+</script>
