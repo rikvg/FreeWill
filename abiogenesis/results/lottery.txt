@@ -1,0 +1,2 @@
+samples 100000000  replicators(score>=16) 0  p=0.000e+00
+score_hist 0:99999998 1:2
