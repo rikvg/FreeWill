@@ -76,7 +76,7 @@ p1 = (f"I generated {fmt(samples)} uniformly random 64-byte programs and ran the
 
 p2 = (f"The pre-life soup isn't uniform. By epoch 11,520 the commonest byte is <code>&lt;</code> at {prov['freq_lt']*100:.1f}%, "
       f"and <code>,</code> makes up {prov['freq_comma']*100:.1f}%. Drawing the ten bytes independently at the soup's own frequencies "
-      f"gives about {prov['p_loaded']:.0e} per placement. Counting every program and about ten workable variants, the soup "
+      f"gives about 10<sup>{round(math.log10(prov['p_loaded']))}</sup> per placement. Counting every program and about ten workable variants, the soup "
       f"should hold a complete motif about 10<sup>{round(math.log10(prov['p_loaded'] * 131072 * 10))}</sup> of the time. "
       f"Even if the whole soup were redrawn from scratch every epoch, {fmt(takeover)} epochs would give odds near "
       f"10<sup>{round(math.log10(prov['p_loaded'] * 131072 * 10 * takeover))}</sup>. Yet seed 1 got there in exactly that time. "
@@ -93,11 +93,16 @@ if small_hits:
     p4_hits = f"{len(small_hits)} of {len(waits['runs'])} took over (at epochs {hit_txt})."
 else:
     p4_hits = f"None of the {len(waits['runs'])} took over."
-p4 = (f"A rare, memoryless event should have an exponential waiting time, and its rate should scale with the number of pairings. "
-      f"I ran independent soups with 16,384 programs, one eighth the size, on one CPU core each. {p4_hits} "
-      f"Together they ran {fmt(small_epochs)} epochs. If the rate per pairing matches seed 1's, a soup this size should need about "
-      f"{fmt(interactions_s1 // 8192)} epochs on average. If the rate were per epoch, independent of soup size, these runs "
-      f"should already have taken over several times.")
+exp_epoch = small_epochs / takeover          # if the rate were per epoch, size-independent
+exp_inter = small_epochs / (interactions_s1 / 8192)  # if the rate is per pairing
+p4 = (f"If origin is a rare event among pairings, its rate should scale with the number of pairings, so a smaller soup should need "
+      f"proportionally more epochs. I ran {len(waits['runs'])} independent soups of 16,384 programs, one eighth the size, on one CPU core each. "
+      f"{p4_hits} Together they ran {fmt(small_epochs)} epochs. If the rate were per epoch, with seed 1's pace of one origin per {fmt(takeover)} epochs "
+      f"whatever the soup size, they should have produced about {exp_epoch:.0f} takeovers, and seeing none would have odds near "
+      f"10<sup>{math.floor(-exp_epoch / math.log(10))}</sup>. If the rate is per pairing, the expected count is {exp_inter:.1f}, "
+      f"and seeing none has a {math.exp(-exp_inter) * 100:.0f}% chance. The data favour the per-pairing lottery. Pooling every run gives roughly "
+      f"one origin per {(interactions_s1 + small_epochs * 8192) / 1e9:.1f} billion pairings. That fits the paper's report that about 40% of "
+      f"full-size runs transition within 16,384 epochs, which implies about one per 2 billion.")
 
 waitcap = ("Each line is an independent 16,384-program soup. A dot marks takeover. An arrowhead means the run was stopped with "
            "no takeover (censored). These runs used one core each, which is why there are few of them.")
@@ -126,8 +131,8 @@ conclusion = (
     "sandbox, so the agreement is with its abstract, not its methods.</p>")
 
 caveats = [
-    "One full-size soup transitioned (seed 1). The replay and small-soup results are informative but small samples. The waiting-time "
-    "claim in particular needs more runs than four CPU cores allow in a session.",
+    "Only one soup transitioned (seed 1, full size). The waiting-time argument rests on four censored small-soup runs plus that one event. "
+    "It rejects a per-epoch rate decisively, but it can't pin down the per-pairing rate to better than a factor of a few.",
     "My simulator reimplements the paper's reference code (cubff) from its source. I didn't run cubff itself, so small differences are possible. "
     "One I know of: my random number streams differ, so runs are not bit-identical to the paper's.",
     "“Replicator” means a self-replication score of at least 32 out of 64 in a test ported from cubff: run the program against random "

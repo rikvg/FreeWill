@@ -40,7 +40,13 @@ process?** The full write-up with charts and live demos is `web/index.html`
    Measured directly, one evolved replicator took over 10 of 30 random
    soups and 5 of 30 pre-life soups (1,024 programs, 150 epochs). Every trial
    ended in extinction or near-total takeover.
-7. **Everything gets rewritten.** By epoch 11,520, only 0.09% of bytes are
+7. **Origin rate scales with pairings.** Four independent soups of 16,384
+   programs (1/8 size) ran 60,000 epochs each with no takeover. A
+   size-independent per-epoch rate predicts about 20 takeovers (P(0) ≈ 10⁻⁹).
+   A per-pairing rate predicts about 2.5 (P(0) ≈ 8%). Pooled: about one origin
+   per 2.7 billion pairings, in line with the paper's ~40% of full-size runs
+   transitioning within 16k epochs.
+8. **Everything gets rewritten.** By epoch 11,520, only 0.09% of bytes are
    original. 71% were last written by `+`/`-` and 29% by mutation. The dominant
    replicator's essential bytes trace to 3 birth events spread over
    about 1,600 epochs before takeover.

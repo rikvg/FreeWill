@@ -47,13 +47,15 @@ a { color: var(--h0); }
 figcaption, .caption { font-size: 0.9rem; color: var(--muted); line-height: 1.45; }
 figure { margin: 0; display: grid; gap: 0.6rem; min-width: 0; }
 .scroll { overflow-x: auto; }
-.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); gap: 0.75rem; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 0.75rem; }
 .fact { border-top: 2px solid var(--ink); padding-top: 0.5rem; display: grid; gap: 0.2rem; }
 .fact b { font: 600 1.5rem/1.1 var(--mono); font-variant-numeric: tabular-nums; }
 .fact span { font-size: 0.9rem; color: var(--muted); line-height: 1.35; }
 table.ops { border-collapse: collapse; font-size: 0.95rem; width: 100%; }
 table.ops td { padding: 0.28rem 0.6rem 0.28rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
-table.ops td:first-child { font: 600 1.05rem var(--mono); width: 2.2rem; }
+table.r0 { border-collapse: collapse; font-size: 0.95rem; width: 100%; }
+table.r0 td { padding: 0.28rem 0.8rem 0.28rem 0; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+table.ops td:first-child { font: 600 1.05rem var(--mono); width: 3.4rem; white-space: nowrap; }
 .prog { font: 400 0.95rem/1.5 var(--mono); letter-spacing: 0.04em; word-break: break-all; }
 .prog .e { background: color-mix(in srgb, var(--rep) 22%, transparent); color: var(--rep); font-weight: 600; border-radius: 2px; }
 .btns { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
@@ -148,7 +150,7 @@ ul { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.35rem; }
 
   <h2>Copying is not enough</h2>
   <p>My ten-byte replicator passes the replication test, yet dropped into a soup it always dies out. The evolved one survives. The difference is what happens across a whole epoch. A replicator goes first half the time, keeping itself and writing a child into its partner. The other half it goes second, and the partner's code runs first. In 78% of those pairings that code runs on into the second half, moves the heads, and usually wrecks the replicator. Averaging the two cases gives the expected number of working copies after one epoch, the replicator's R<sub>0</sub>:</p>
-  <div class="scroll"><table class="ops" id="r0table"></table></div>
+  <div class="scroll"><table class="r0" id="r0table"></table></div>
   <p id="r0text"></p>
 
   <h2>Everything was rewritten</h2>
@@ -219,7 +221,7 @@ const DATA = /*DATA*/null;
 
   // ---------- chart 1 ----------
   function chart1() {
-    const svg = $('chart1'), W = 640, H = 260, m = { l: 44, r: 44, t: 14, b: 30 };
+    const svg = $('chart1'), W = 640, H = 260, m = { l: 44, r: 44, t: 26, b: 30 };
     const L = DATA.log, xmax = L[L.length - 1][0];
     const x = e => m.l + (W - m.l - m.r) * e / xmax;
     const ymax = 5;
@@ -229,7 +231,7 @@ const DATA = /*DATA*/null;
     for (let v = 0; v <= ymax; v++) s += `<line class="axis" x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}" stroke-width="${v ? 0.5 : 1}"/><text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
     for (let e = 0; e <= xmax; e += 2000) s += `<text x="${x(e)}" y="${H - m.b + 16}" text-anchor="middle">${fmt(e)}</text>`;
     s += `<text x="${(W) / 2}" y="${H - 2}" text-anchor="middle">epoch</text>`;
-    s += `<text x="${m.l - 6}" y="${m.t - 2}" text-anchor="end">bits</text>`;
+    s += `<text x="${m.l}" y="${m.t - 12}" text-anchor="start">bits per byte</text>`;
     for (const v of [0, 0.5, 1]) s += `<text x="${W - m.r + 6}" y="${yr(v) + 4}">${v * 100}%</text>`;
     let area = `M${x(L[0][0])},${yr(0)}`;
     L.forEach(r => area += `L${x(r[0])},${yr(r[2])}`);
@@ -300,8 +302,8 @@ const DATA = /*DATA*/null;
     $('waitcap').innerHTML = d.waitcap;
     $('prov').innerHTML = DATA.prov;
     const R = DATA.r0;
-    $('r0table').innerHTML = '<tr><td></td><td><b>partners from</b></td><td><b>going first</b></td><td><b>going second</b></td><td><b>R<sub>0</sub></b></td></tr>' +
-      R.rows.map(r => `<tr><td></td><td>${r.who} · ${r.env}</td><td class="mono">${r.first.toFixed(2)}</td><td class="mono">${r.second.toFixed(2)}</td><td class="mono"><b style="color:${r.R0 > 1 ? 'var(--rep)' : 'var(--muted)'}">${r.R0.toFixed(2)}</b></td></tr>`).join('');
+    $('r0table').innerHTML = '<tr><td><b>replicator · partners from</b></td><td><b>going first</b></td><td><b>going second</b></td><td><b>R<sub>0</sub></b></td></tr>' +
+      R.rows.map(r => `<tr><td>${r.who} · ${r.env}</td><td class="mono">${r.first.toFixed(2)}</td><td class="mono">${r.second.toFixed(2)}</td><td class="mono"><b style="color:${r.R0 > 1 ? 'var(--rep)' : 'var(--muted)'}">${r.R0.toFixed(2)}</b></td></tr>`).join('');
     $('r0text').innerHTML = R.text;
     $('conclusion').innerHTML = DATA.conclusion;
     $('caveats').innerHTML = DATA.caveats.map(c => `<li>${c}</li>`).join('');
