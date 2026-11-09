@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Oracle</title>
+<style>
+  :root { --bg:#f6f4ef; --fg:#1d1c1a; --muted:#6b675f; --line:#d9d4c9; --hit:#b3402a; --miss:#2f6f5e; --card:#fffdf8; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg:#151513; --fg:#ece8df; --muted:#9a958a; --line:#33312c; --hit:#e0735c; --miss:#5fb39b; --card:#1d1c19; } }
+  :root[data-theme="dark"] { --bg:#151513; --fg:#ece8df; --muted:#9a958a; --line:#33312c; --hit:#e0735c; --miss:#5fb39b; --card:#1d1c19; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 Georgia, "Times New Roman", serif; }
+  main { max-width:640px; margin:0 auto; padding:40px 16px 64px; }
+  h1 { font-size:2.2rem; margin:0 0 4px; letter-spacing:-0.01em; }
+  .lede { color:var(--muted); margin:0 0 28px; }
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
+  .stat { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px; }
+  .stat b { display:block; font:600 1.8rem/1.1 ui-monospace, Menlo, monospace; font-variant-numeric:tabular-nums; }
+  .stat span { color:var(--muted); font-size:.85rem; }
+  .keys { display:flex; gap:12px; margin:20px 0; }
+  .keys button { flex:1; font:600 1.4rem ui-monospace, Menlo, monospace; padding:22px 0; border-radius:8px;
+    border:1px solid var(--line); background:var(--card); color:var(--fg); cursor:pointer; touch-action:manipulation; }
+  .keys button:active { transform:translateY(1px); }
+  .last { min-height:1.5em; color:var(--muted); }
+  .last .h { color:var(--hit); } .last .m { color:var(--miss); }
+  .strip { display:flex; flex-wrap:wrap; gap:3px; margin:16px 0; min-height:12px; }
+  .strip i { width:9px; height:9px; border-radius:2px; background:var(--miss); }
+  .strip i.h { background:var(--hit); }
+  .verdict { border-left:3px solid var(--fg); padding:4px 0 4px 14px; margin:24px 0; }
+  .verdict:empty { display:none; }
+  footer { color:var(--muted); font-size:.9rem; border-top:1px solid var(--line); margin-top:32px; padding-top:16px; }
+  .reset { background:none; border:none; color:var(--muted); text-decoration:underline; cursor:pointer; font:inherit; padding:0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>The Oracle</h1>
+  <p class="lede">Press <b>F</b> or <b>D</b>, as unpredictably as you can. Before each press the Oracle commits to a guess.
+    If you have free will, it should be right about half the time.</p>
+
+  <div class="stats">
+    <div class="stat"><b id="acc">–</b><span>Oracle right</span></div>
+    <div class="stat"><b id="n">0</b><span>presses</span></div>
+    <div class="stat"><b id="p">–</b><span>chance it's luck</span></div>
+  </div>
+
+  <div class="keys">
+    <button data-k="0" aria-label="Press F">F</button>
+    <button data-k="1" aria-label="Press D">D</button>
+  </div>
+  <div class="last" id="last" aria-live="polite">Waiting for your first move.</div>
+  <div class="strip" id="strip" aria-hidden="true"></div>
+  <div class="verdict" id="verdict"></div>
+
+  <footer>
+    Red squares are presses the Oracle predicted; green ones are presses it missed. It only looks at the pattern of your past presses,
+    nothing else. The idea comes from Scott Aaronson's "free will" predictor.
+    <button class="reset" id="reset">Start over</button>
+  </footer>
+</main>
+<script src="oracle.js"></script>
+<script>
+  const KEYS = ['F', 'D'];
+  let oracle, guess, hits, total;
+  const $ = id => document.getElementById(id);
+
+  // One-sided binomial tail P(X >= hits | n, 0.5) via normal approximation.
+  function luck(h, n) {
+    if (n < 10) return null;
+    const z = (h - 0.5 - n / 2) / Math.sqrt(n / 4);
+    const t = 1 / (1 + 0.2316419 * Math.abs(z));
+    const d = 0.3989423 * Math.exp(-z * z / 2);
+    const tail = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+    return z > 0 ? tail : 1 - tail;
+  }
+
+  function reset() {
+    oracle = new Oracle(5); hits = 0; total = 0; guess = oracle.predict();
+    $('strip').innerHTML = ''; $('verdict').textContent = '';
+    $('last').textContent = 'Waiting for your first move.';
+    render();
+  }
+
+  function render() {
+    $('n').textContent = total;
+    $('acc').textContent = total ? Math.round(100 * hits / total) + '%' : '–';
+    const p = luck(hits, total);
+    $('p').textContent = p === null ? '–' : p < 0.001 ? '<0.1%' : (100 * p).toFixed(1) + '%';
+  }
+
+  function verdict() {
+    const a = hits / total, p = luck(hits, total);
+    if (p < 0.01) return `After ${total} presses the Oracle is right ${Math.round(a * 100)}% of the time. Odds of that by luck: under 1%. You are more predictable than you feel.`;
+    if (a <= 0.55) return `After ${total} presses the Oracle is stuck near chance. Either you are unusually random, or you found a source of randomness outside your head.`;
+    return `After ${total} presses the Oracle is ahead, but not by enough to be sure. Keep going.`;
+  }
+
+  function press(k) {
+    const hit = guess === k;
+    hits += hit; total++;
+    oracle.observe(k);
+    const sq = document.createElement('i'); if (hit) sq.className = 'h';
+    $('strip').appendChild(sq);
+    $('last').innerHTML = `You pressed ${KEYS[k]}. The Oracle had guessed ${KEYS[guess]}: <span class="${hit ? 'h' : 'm'}">${hit ? 'predicted' : 'missed'}</span>.`;
+    if (total % 50 === 0) $('verdict').textContent = verdict();
+    guess = oracle.predict();
+    render();
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = { f: 0, d: 1 }[e.key.toLowerCase()];
+    if (k !== undefined) { e.preventDefault(); press(k); }
+  });
+  document.querySelectorAll('.keys button').forEach(b => b.addEventListener('click', () => press(+b.dataset.k)));
+  $('reset').addEventListener('click', reset);
+  reset();
+</script>
+</body>
+</html>

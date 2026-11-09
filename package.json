@@ -1,0 +1,8 @@
+{
+  "name": "freewill-oracle",
+  "version": "1.0.0",
+  "description": "A tiny predictor that tests how free your keypresses really are.",
+  "private": true,
+  "scripts": { "test": "node --test test/*.test.js" },
+  "license": "MIT"
+}
