@@ -229,6 +229,8 @@ typedef struct {
   int rep_thresh;    // selfrep score counted as a replicator
   long stop_after;   // stop this many epochs after takeover detected (-1: never)
   int solo;          // control: tapes interact with fresh noise, not each other
+  const char *load;  // resume from this snapshot (new seed => a replay)
+  double stop_frac;  // takeover = sampled replicator fraction >= this
 } params_t;
 
 static void save_snapshot(const params_t *P, long epoch, const uint8_t *soup,
@@ -252,6 +254,18 @@ static int run(params_t *P) {
   size_t bcap = BrotliEncoderMaxCompressedSize(n * T);
   uint8_t *bbuf = malloc(bcap);
 
+  long start_epoch = 1;
+  if (P->load) {
+    FILE *f = fopen(P->load, "rb");
+    uint64_t hdr[4];
+    if (!f || fread(hdr, sizeof hdr, 1, f) != 1 || hdr[1] != n ||
+        fread(soup, 1, n * T, f) != n * T || fread(tags, sizeof(tag_t), n * T, f) != n * T) {
+      fprintf(stderr, "cannot load %s (n must match)\n", P->load);
+      return 1;
+    }
+    fclose(f);
+    start_epoch = (long)hdr[2] + 1;
+  } else
   for (size_t i = 0; i < n; i++) {
     rng_t r = rseed(P->seed, 1, i);
     for (int j = 0; j < T; j++) {
@@ -268,8 +282,9 @@ static int run(params_t *P) {
 
   long takeover_epoch = -1;
   long ops_acc = 0, inter_acc = 0;
-  for (long epoch = 1; epoch <= P->epochs; epoch++) {
+  for (long epoch = start_epoch; epoch < start_epoch + P->epochs; epoch++) {
     rng_t sr = rseed(P->seed, 2, (uint64_t)epoch);
+    for (size_t i = 0; i < n; i++) perm[i] = (uint32_t)i;
     for (size_t i = n - 1; i > 0; i--) {
       size_t j = rnext(&sr) % (i + 1);
       uint32_t t = perm[i]; perm[i] = perm[j]; perm[j] = t;
@@ -330,7 +345,7 @@ static int run(params_t *P) {
     ops_acc += ops;
     inter_acc += P->solo ? (long)n : (long)(n / 2);
 
-    int do_log = (epoch % P->log_every == 0) || epoch == 1;
+    int do_log = (epoch % P->log_every == 0) || epoch == start_epoch;
     if (do_log) {
       size_t counts[256] = {0};
       for (size_t i = 0; i < n * T; i++) counts[soup[i]]++;
@@ -370,7 +385,7 @@ static int run(params_t *P) {
       fflush(stdout);
       ops_acc = inter_acc = 0;
 
-      if (takeover_epoch < 0 && (double)reps / S >= 0.5) {
+      if (takeover_epoch < 0 && (double)reps / S >= P->stop_frac) {
         takeover_epoch = epoch;
         fprintf(stderr, "takeover at epoch %ld\n", epoch);
       }
@@ -526,7 +541,8 @@ int main(int argc, char **argv) {
   const char *mode = argv[1];
   params_t P = {.n = 1 << 17, .seed = 1, .mut = 1.0 / 4096, .epochs = 20000,
                 .log_every = 64, .snap_every = 0, .snap_dir = NULL, .sample = 512,
-                .rep_thresh = 32, .stop_after = -1, .solo = 0};
+                .rep_thresh = 32, .stop_after = -1, .solo = 0, .load = NULL,
+                .stop_frac = 0.5};
   int top_k = 5; long samples = 1000000; const char *json = NULL, *hits = NULL;
   const char *positional = NULL;
   for (int i = 2; i < argc; i++) {
@@ -545,6 +561,8 @@ int main(int argc, char **argv) {
     else if (OPT("-stop-after")) P.stop_after = atol(v);
     else if (OPT("-steps")) g_steps = atol(v);
     else if (OPT("-top")) top_k = atoi(v);
+    else if (OPT("-load")) P.load = v;
+    else if (OPT("-stop-frac")) P.stop_frac = atof(v);
     else if (OPT("-samples")) samples = atol(v);
     else if (OPT("-json")) json = v;
     else if (OPT("-hits")) hits = v;

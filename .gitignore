@@ -3,3 +3,6 @@ abiogenesis/soup.new
 abiogenesis/runs/*/snap_*.bin
 __pycache__/
 abiogenesis/runs/s*/
+abiogenesis/runs/keep/
+abiogenesis/runs/replay/
+abiogenesis/runs/small/
