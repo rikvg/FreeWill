@@ -2,3 +2,4 @@ abiogenesis/soup
 abiogenesis/soup.new
 abiogenesis/runs/*/snap_*.bin
 __pycache__/
+abiogenesis/runs/s*/
