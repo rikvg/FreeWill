@@ -37,6 +37,9 @@ process?** The full write-up with charts and live demos is `web/index.html`
    evolved one makes 1.16 and establishes about 1 time in 3. Going second is
    what kills replicators: the partner's code runs into them 78% of the time.
    The pre-life soup is no friendlier than noise (evolved R₀ ≈ 1.1 there).
+   Measured directly, one evolved replicator took over 10 of 30 random
+   soups and 5 of 30 pre-life soups (1,024 programs, 150 epochs). Every trial
+   ended in extinction or near-total takeover.
 7. **Everything gets rewritten.** By epoch 11,520, only 0.09% of bytes are
    original. 71% were last written by `+`/`-` and 29% by mutation. The dominant
    replicator's essential bytes trace to 3 birth events spread over

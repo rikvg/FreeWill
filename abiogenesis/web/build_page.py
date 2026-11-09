@@ -114,11 +114,12 @@ prov_txt = (f"By the time replicators appear, the soup has been rewritten almost
 conclusion = (
     "<p class='verdict'>Neither story alone fits. The first replicator is far too improbable to be a lucky draw, "
     "yet once the soup reaches its pre-life state, the moment it appears behaves like a lottery.</p>"
-    "<p>My reading: the early soup is a process, and the moment of origin is a lottery. In the first few thousand epochs the soup "
+    "<p>My reading: the early soup is a process; the moment of origin is a lottery. In the first few thousand epochs the soup "
     "changes fast. Instruction counts per pairing rise from 65 to about 230, single-byte entropy falls, and nearly every original byte is "
     "overwritten by computation. Then it settles into a stationary pre-life regime that shuffles, copies and edits fragments far "
     "faster than chance would produce them. The replicator is a rare outcome of that regime: the soup prints its own lottery "
-    "tickets, by the billion, and they are far better tickets than random bytes. No snapshot I looked at was primed. A state 256 epochs "
+    "tickets, by the billion, and they are far better tickets than random bytes. A winning ticket also has to be cashed: with R<sub>0</sub> "
+    "barely above 1, a new replicator usually dies out before anyone would notice it. No snapshot I looked at was primed. A state 256 epochs "
     "before takeover was as far from the edge as one 2,800 epochs before.</p>"
     "<p>This fits the follow-up paper “BFF: Simple explanations for complex phenomena” (arXiv 2607.01483), which reportedly finds "
     "replicators faster with pure random search plus tuned mutation than with pairwise interaction. I could not read that paper from my "
@@ -148,12 +149,15 @@ r0rows = []
 for k, v in r0.items():
     who, env = k.split(" in ")
     r0rows.append(dict(who=who, env=env.replace("e8960", "(epoch 8,960)").replace("e11520", "(epoch 11,520)"), **v))
+est = json.load(open(rd("establishment.json")))
+er, ep = est["random"], est["pre-life"]
 r0text = ("Columns count working replicators after one pairing (the program itself plus its child), averaged over 1,500 trials each. "
-          "In a branching process with R<sub>0</sub> below 1 a lineage always dies out. Just above 1, most lineages still die out by "
-          "chance while rare. The evolved replicator's R<sub>0</sub> of about 1.1 to 1.16 implies it establishes only around 20 to 30% "
-          "of the time; in browser trials it took over 3 of 10 random soups. The pre-life soup is no friendlier than random noise: "
-          "slightly harsher, if anything. So the origin of replication in this world has two hurdles. A working copy loop has to form, "
-          "and then it has to survive being rare. Many may form and vanish before one sticks.")
+          "In a branching process, a lineage with R<sub>0</sub> below 1 always dies out. Just above 1, most lineages still die out by "
+          "chance while they're rare. I tested that directly: one evolved replicator dropped into a 1,024-program soup, run for 150 epochs. "
+          f"It took over {er['established']} of {er['trials']} random soups and {ep['established']} of {ep['trials']} soups built from "
+          "seed 1's pre-life programs. Every trial ended in either extinction or near-total takeover, nothing in between. The pre-life soup is no "
+          "friendlier than noise; if anything it is harsher. So the origin of replication here has two hurdles. A working copy loop has "
+          "to form, and then it has to survive being rare. Many may form and vanish before one sticks.")
 data = dict(r0=dict(rows=r0rows, text=r0text), log=log, takeover=takeover, evolved=evolved, hero=hero, facts=facts,
             lottery=dict(p1=p1, p2=p2, p3=p3, p4=p4, waitcap=waitcap),
             waits=waits, prov=prov_txt, conclusion=conclusion, caveats=caveats)
